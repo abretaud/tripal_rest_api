@@ -1,0 +1,109 @@
+<?php
+// $Id$
+
+/**
+ * Implementation of hook_permission().
+ */
+function tripal_rest_api_permission() {
+    return array(
+        'access tripal_rest_api job' => array(
+            'title' => t('View jobs from API'),
+            'description' => t('Allow users to view jobs from the API.'),
+        ),
+        'create tripal_rest_api job' => array(
+            'title' => t('Create new jobs from API'),
+            'description' => t('Allow users to create jobs from the API.'),
+        )
+    );
+}
+
+/**
+ * Gets a job object by id.
+ *
+ * @param int $id
+ * @return object
+ */
+function tripal_rest_api_job_retrieve($id) {
+    $job = db_query('SELECT j.* FROM {tripal_jobs} j WHERE j.job_id=:job_id', array(':job_id' => $id))
+        ->fetchObject();
+
+    return $job;
+}
+
+/**
+ * Creates a new job
+ *
+ * @param object job
+ * @return void
+ */
+function tripal_rest_api_job_create($job) {
+    return tripal_add_job($job->name, $job->modulename, $job->callback, $job->arguments, $job->uid);
+}
+
+/**
+ * Implementation of hook_services_resources().
+ */
+function tripal_rest_api_services_resources() {
+    return array(
+     'job' => array(
+         'operations' => array(
+         'retrieve' => array(
+             'help' => 'Retrieves a job',
+             'file' => array('type' => 'inc', 'module' => 'tripal_rest_api', 'name' => 'tripal_rest_api'),
+             'callback' => '_tripal_rest_api_job_retrieve',
+             'access callback' => 'user_access',
+             'access arguments' => array('access tripal_rest_api job'),
+             'access arguments append' => FALSE,
+             'args' => array(
+                 array(
+                     'name' => 'id',
+                     'type' => 'int',
+                     'description' => 'The id of the job to get',
+                     'source' => array('path' => '0'),
+                     'optional' => FALSE,
+                 ),
+             ),
+         ),
+         'create' => array(
+             'help' => 'Creates a job',
+             'file' => array('type' => 'inc', 'module' => 'tripal_rest_api', 'name' => 'tripal_rest_api'),
+             'callback' => '_tripal_rest_api_job_create',
+             'access callback' => 'user_access',
+             'access arguments' => array('create tripal_rest_api job'),
+             'access arguments append' => FALSE,
+             'args' => array(
+                 array(
+                     'name' => 'data',
+                     'type' => 'stdClass',
+                     'description' => 'The job object',
+                     'source' => 'data',
+                     'optional' => FALSE,
+                 ),
+             ),
+         ),
+         'index' => array(
+           'help' => 'Retrieves a listing of jobs',
+           'file' => array('type' => 'inc', 'module' => 'tripal_rest_api', 'name' => 'tripal_rest_api'),
+           'callback' => '_tripal_rest_api_job_index',
+           'access callback' => 'user_access',
+           'access arguments' => array('access tripal_rest_api job'),
+           'access arguments append' => FALSE,
+           'args' => array(),
+         ),
+     ),
+     ),
+    );
+}
+
+/**
+ * Implements hook_ctools_plugin_api().
+ */
+function tripal_rest_api_ctools_plugin_api($owner, $api) {
+    if ($owner == 'services' && $api == 'services') {
+        return array(
+            'version' => 3,
+            'file' => 'tripal_rest_api.services.inc',
+            'path' => drupal_get_path('module', 'tripal_rest_api'),
+        );
+    }
+}

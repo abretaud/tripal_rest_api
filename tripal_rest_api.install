@@ -1,0 +1,14 @@
+<?php
+// $Id$
+
+/**
+ * Implementation of hook_install().
+ */
+function tripal_rest_api_install() {
+}
+
+/**
+ * Implementation of hook_uninstall().
+ */
+function tripal_rest_api_uninstall() {
+}

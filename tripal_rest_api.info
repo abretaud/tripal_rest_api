@@ -1,0 +1,11 @@
+name = Tripal REST API
+description = A module exposing a REST API to interact with Tripal
+core = 7.x
+version = 7.x-2.1
+project = tripal_rest_api
+package = Tripal Extensions
+dependencies[] = tripal_core
+dependencies[] = tripal_feature
+dependencies[] = tripal_analysis
+dependencies[] = tripal_organism
+dependencies[] = services
