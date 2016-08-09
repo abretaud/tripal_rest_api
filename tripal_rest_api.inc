@@ -11,7 +11,11 @@ function _tripal_rest_api_job_create($data) {
 
     global $user;
 
+    $args = $data['arguments']; // Save this before as we want to keep it as an array
+
     $data = json_decode(json_encode($data), FALSE); // Convert to a PHP object instead of array
+
+    $data->arguments = $args; // Restore the array to replace potential stdClass generated above
 
     $data->uid = $user->uid;
 
