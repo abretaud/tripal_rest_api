@@ -1,6 +1,4 @@
 <?php
-// $Id$
-
 /**
  * Callback for creating job resources.
  *
@@ -61,4 +59,20 @@ function _tripal_rest_api_job_index() {
   $jobs = db_query("SELECT * FROM {tripal_jobs} ORDER BY job_id")->fetchAll();
 
   return $jobs;
+}
+
+/**
+ * Callback for listing chado table content
+ *
+ * @param object $data
+ * @return object
+ */
+function _tripal_rest_api_chado_list($data) {
+
+    if (!isset($data['table'])) {
+        return services_error('Missing Chado table name \'table\'', 406);
+    }
+    $content = tripal_rest_api_chado_list($data['table']);
+
+    return $content;
 }

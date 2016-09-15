@@ -6,6 +6,10 @@
  */
 function tripal_rest_api_permission() {
     return array(
+        'access tripal_rest_api chado' => array(
+            'title' => t('View chado content from API'),
+            'description' => t('Allow users to view Chado table content from the API.'),
+        ),
         'access tripal_rest_api job' => array(
             'title' => t('View jobs from API'),
             'description' => t('Allow users to view jobs from the API.'),
@@ -41,56 +45,90 @@ function tripal_rest_api_job_create($job) {
 }
 
 /**
+ * Get some Chado content
+ *
+ * @param string $table
+ * @return object
+ */
+function tripal_rest_api_chado_list($table) {
+    $content = db_query('SELECT * FROM {'.$table.'}')
+        ->fetchAll();
+
+    return $content;
+}
+
+/**
  * Implementation of hook_services_resources().
  */
 function tripal_rest_api_services_resources() {
     return array(
-     'job' => array(
-         'operations' => array(
-         'retrieve' => array(
-             'help' => 'Retrieves a job',
-             'file' => array('type' => 'inc', 'module' => 'tripal_rest_api', 'name' => 'tripal_rest_api'),
-             'callback' => '_tripal_rest_api_job_retrieve',
-             'access callback' => 'user_access',
-             'access arguments' => array('access tripal_rest_api job'),
-             'access arguments append' => FALSE,
-             'args' => array(
-                 array(
-                     'name' => 'id',
-                     'type' => 'int',
-                     'description' => 'The id of the job to get',
-                     'source' => array('path' => '0'),
-                     'optional' => FALSE,
+     'chado' => array(
+         'actions' => array(
+             'list' => array(
+                'help' => t('List content from a Chado table.'),
+                'file' => array('type' => 'inc', 'module' => 'tripal_rest_api', 'name' => 'tripal_rest_api'),
+                'callback' => '_tripal_rest_api_chado_list',
+                'access callback' => 'user_access',
+                'access arguments' => array('access tripal_rest_api chado'),
+                'access arguments append' => FALSE,
+                'args' => array(
+                     array(
+                         'name' => 'data',
+                         'type' => 'stdClass',
+                         'description' => 'The chado table to list',
+                         'source' => 'data',
+                         'optional' => FALSE,
+                     ),
                  ),
-             ),
-         ),
-         'create' => array(
-             'help' => 'Creates a job',
-             'file' => array('type' => 'inc', 'module' => 'tripal_rest_api', 'name' => 'tripal_rest_api'),
-             'callback' => '_tripal_rest_api_job_create',
-             'access callback' => 'user_access',
-             'access arguments' => array('create tripal_rest_api job'),
-             'access arguments append' => FALSE,
-             'args' => array(
-                 array(
-                     'name' => 'data',
-                     'type' => 'stdClass',
-                     'description' => 'The job object',
-                     'source' => 'data',
-                     'optional' => FALSE,
-                 ),
-             ),
-         ),
-         'index' => array(
-           'help' => 'Retrieves a listing of jobs',
-           'file' => array('type' => 'inc', 'module' => 'tripal_rest_api', 'name' => 'tripal_rest_api'),
-           'callback' => '_tripal_rest_api_job_index',
-           'access callback' => 'user_access',
-           'access arguments' => array('access tripal_rest_api job'),
-           'access arguments append' => FALSE,
-           'args' => array(),
+             )
          ),
      ),
+     'job' => array(
+         'operations' => array(
+             'retrieve' => array(
+                 'help' => 'Retrieves a job',
+                 'file' => array('type' => 'inc', 'module' => 'tripal_rest_api', 'name' => 'tripal_rest_api'),
+                 'callback' => '_tripal_rest_api_job_retrieve',
+                 'access callback' => 'user_access',
+                 'access arguments' => array('access tripal_rest_api job'),
+                 'access arguments append' => FALSE,
+                 'args' => array(
+                     array(
+                         'name' => 'id',
+                         'type' => 'int',
+                         'description' => 'The id of the job to get',
+                         'source' => array('path' => '0'),
+                         'optional' => FALSE,
+                     ),
+                 ),
+             ),
+             'create' => array(
+                 'help' => 'Creates a job',
+                 'file' => array('type' => 'inc', 'module' => 'tripal_rest_api', 'name' => 'tripal_rest_api'),
+                 'callback' => '_tripal_rest_api_job_create',
+                 'access callback' => 'user_access',
+                 'access arguments' => array('create tripal_rest_api job'),
+                 'access arguments append' => FALSE,
+                 'args' => array(
+                     array(
+                         'name' => 'data',
+                         'type' => 'stdClass',
+                         'description' => 'The job object',
+                         'source' => 'data',
+                         'optional' => FALSE,
+                     ),
+                 ),
+             ),
+             'index' => array(
+               'help' => 'Retrieves a listing of jobs',
+               'file' => array('type' => 'inc', 'module' => 'tripal_rest_api', 'name' => 'tripal_rest_api'),
+               'callback' => '_tripal_rest_api_job_index',
+               'access callback' => 'user_access',
+               'access arguments' => array('access tripal_rest_api job'),
+               'access arguments append' => FALSE,
+               'args' => array(),
+             ),
+         ),
      ),
     );
 }
