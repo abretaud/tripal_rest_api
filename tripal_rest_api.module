@@ -10,6 +10,10 @@ function tripal_rest_api_permission() {
             'title' => t('View chado content from API'),
             'description' => t('Allow users to view Chado table content from the API.'),
         ),
+        'access tripal_rest_api elasticsearch' => array(
+            'title' => t('Index with elasticsearch from API'),
+            'description' => t('Allow users to index with elasticsearch the chado content from the API.'),
+        ),
         'access tripal_rest_api job' => array(
             'title' => t('View jobs from API'),
             'description' => t('Allow users to view jobs from the API.'),
@@ -76,6 +80,27 @@ function tripal_rest_api_services_resources() {
                          'name' => 'data',
                          'type' => 'stdClass',
                          'description' => 'The chado table to list',
+                         'source' => 'data',
+                         'optional' => FALSE,
+                     ),
+                 ),
+             )
+         ),
+     ),
+     'elasticsearch' => array(
+         'actions' => array(
+             'index' => array(
+                'help' => t('Index Chado content with elasticsearch module.'),
+                'file' => array('type' => 'inc', 'module' => 'tripal_rest_api', 'name' => 'tripal_rest_api'),
+                'callback' => '_tripal_rest_api_elasticsearch_index',
+                'access callback' => 'user_access',
+                'access arguments' => array('access tripal_rest_api elasticsearch'),
+                'access arguments append' => FALSE,
+                'args' => array(
+                     array(
+                         'name' => 'data',
+                         'type' => 'stdClass',
+                         'description' => 'The settings for indexing',
                          'source' => 'data',
                          'optional' => FALSE,
                      ),

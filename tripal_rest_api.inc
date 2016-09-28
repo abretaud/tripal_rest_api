@@ -76,3 +76,72 @@ function _tripal_rest_api_chado_list($data) {
 
     return $content;
 }
+
+/**
+ * Callback for indexing with elasticsearch
+ *
+ * @param object $data
+ * @return object
+ */
+function _tripal_rest_api_elasticsearch_index($data) {
+
+    if (!isset($data['table'])) {
+        return services_error('Missing Chado table name \'table\'', 406);
+    }
+
+    $queue_N = $data['queues'];
+
+    // Convert human readable table name to id
+    $table_list = get_table_list();
+    foreach ($table_list as $table_id => $table_name) {
+        if ($data['table'] == $table_name) {
+            $table_dropdown = $table_id;
+            break;
+        }
+    }
+
+    if (!isset($table_dropdown)) {
+        return services_error('Could not find Chado table with name \''.$data['table'].'\'', 406);
+    }
+
+    if (!isset($data['queues'])) {
+        $data['queues'] = 10;
+    }
+
+    $field_list = get_column_list($data['table']);
+
+    $fields = array();
+    if (!empty($data['fields'])) {
+        foreach ($data['fields'] as $asked_field) {
+            foreach ($field_list as $field_id => $field_name) {
+                if ($asked_field == $field_name) {
+                    $fields[strval($field_id)] = strval($field_id);
+                    break;
+                }
+            }
+        }
+    }
+    else if ($table_dropdown > 0) {
+      # No field given, index all fields
+      foreach ($field_list as $field_id => $field_name) {
+        $fields[strval($field_id)] = strval($field_id);
+      }
+    }
+
+    // Add indexing tasks to the queues
+    $content = run_elasticsearch_indexing($table_dropdown, $queue_N, $fields);
+
+    if ($table_dropdown > 0) {
+        // Create the search block
+        tripal_elasticsearch_add_block($data['table'], $data['fields']);
+
+        // Clear the cache (needed for search block to show up)
+        drupal_flush_all_caches();
+
+        if (!empty($data['links'])) {
+            tripal_elasticsearch_add_links($data['table'], $data['links']);
+        }
+    }
+
+    return $content;
+}

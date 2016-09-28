@@ -51,6 +51,13 @@ function tripal_rest_api_default_services_endpoint() {
                     ),
                 ),
             ),
+        'elasticsearch' => array(
+            'actions' => array(
+                'index' => array(
+                    'enabled' => '1',
+                    ),
+                ),
+            ),
         'node' => array(
             'operations' => array(
                 'retrieve' => array(
