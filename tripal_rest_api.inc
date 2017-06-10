@@ -78,6 +78,17 @@ function _tripal_rest_api_chado_list($data) {
 }
 
 /**
+ * Callback for listing taxonomic ranks from chado table content
+ *
+ * @param object $data
+ * @return object
+ */
+function _tripal_rest_api_chado_taxonomic_ranks() {
+
+    return tripal_rest_api_chado_taxonomic_ranks();
+}
+
+/**
  * Callback for indexing with elasticsearch
  *
  * @param object $data

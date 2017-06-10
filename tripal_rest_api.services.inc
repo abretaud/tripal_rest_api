@@ -49,6 +49,9 @@ function tripal_rest_api_default_services_endpoint() {
                 'list' => array(
                     'enabled' => '1',
                     ),
+                'taxonomic_ranks' => array(
+                    'enabled' => '1',
+                    )
                 ),
             ),
         'elasticsearch' => array(

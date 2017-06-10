@@ -62,6 +62,19 @@ function tripal_rest_api_chado_list($table) {
 }
 
 /**
+ * Get list of taxonomic ranks from Chado content
+ *
+ * @param string $table
+ * @return object
+ */
+function tripal_rest_api_chado_taxonomic_ranks() {
+    $content = db_query("SELECT * FROM {cvterm} where name in ('subspecies', 'varietas', 'subvariety', 'forma', 'subforma')")
+        ->fetchAll();
+
+    return $content;
+}
+
+/**
  * Implementation of hook_services_resources().
  */
 function tripal_rest_api_services_resources() {
@@ -83,6 +96,16 @@ function tripal_rest_api_services_resources() {
                          'source' => 'data',
                          'optional' => FALSE,
                      ),
+                 ),
+             ),
+             'taxonomic_ranks' => array(
+                'help' => t('Get the list of taxonomic ranks from a Chado table.'),
+                'file' => array('type' => 'inc', 'module' => 'tripal_rest_api', 'name' => 'tripal_rest_api'),
+                'callback' => '_tripal_rest_api_chado_taxonomic_ranks',
+                'access callback' => 'user_access',
+                'access arguments' => array('access tripal_rest_api chado'),
+                'access arguments append' => FALSE,
+                'args' => array(
                  ),
              )
          ),
