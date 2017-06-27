@@ -177,6 +177,17 @@ function tripal_rest_api_services_resources() {
                'args' => array(),
              ),
          ),
+         'actions' => array(
+             'run' => array(
+                 'help' => 'Run all jobs in queue',
+                 'file' => array('type' => 'inc', 'module' => 'tripal_rest_api', 'name' => 'tripal_rest_api'),
+                 'callback' => '_tripal_rest_api_job_run',
+                 'access callback' => 'user_access',
+                 'access arguments' => array('access tripal_rest_api job'),
+                 'access arguments append' => FALSE,
+                 'args' => array(),
+             ),
+         ),
      ),
     );
 }

@@ -62,6 +62,39 @@ function _tripal_rest_api_job_index() {
 }
 
 /**
+ * Callback for running all jobs in queue.
+ *
+ * @return object
+ */
+function _tripal_rest_api_job_run() {
+
+    if (tripal_is_job_running()) {
+        // Some job is already running, can't launch a new one
+        return (object)array(
+            'status' => 'busy',
+        );
+    }
+
+    // Create 2 temp files for stdout and stderr
+    $stdout = '/dev/null';
+    $stderr = '/dev/null';
+    if (!empty(getenv('GALAXY_SHARED_DIR'))) {
+        $logs_dir = getenv('GALAXY_SHARED_DIR').'/logs/';
+        mkdir($logs_dir, 0777, true);
+        $stdout = tempnam($logs_dir, 'stdout');
+        $stderr = tempnam($logs_dir, 'stderr');
+    }
+
+    exec("drush trp-run-jobs --username=admin > $stdout 2> $stderr &");
+
+    return (object)array(
+            'status' => 'running',
+            'stdout' => $stdout,
+            'stderr' => $stderr
+        );
+}
+
+/**
  * Callback for listing chado table content
  *
  * @param object $data
