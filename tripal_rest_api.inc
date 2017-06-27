@@ -58,6 +58,21 @@ function _tripal_rest_api_job_index() {
 
   $jobs = db_query("SELECT * FROM {tripal_jobs} ORDER BY job_id")->fetchAll();
 
+  foreach ($jobs as $id => $job) {
+      $job->arguments = unserialize($job->arguments);
+      $job->raw_arguments = $job->arguments;
+      $arg_hook = $job->modulename . "_job_describe_args";
+      if (is_callable($arg_hook)) {
+        $new_args = call_user_func_array($arg_hook, array($job->callback, $job->arguments));
+        if (is_array($new_args) and count($new_args)) {
+          $job->arguments = $new_args;
+        }
+        else {
+          $job->arguments = $job->arguments;
+        }
+      }
+  }
+
   return $jobs;
 }
 

@@ -35,6 +35,19 @@ function tripal_rest_api_job_retrieve($id) {
     $job = db_query('SELECT j.* FROM {tripal_jobs} j WHERE j.job_id=:job_id', array(':job_id' => $id))
         ->fetchObject();
 
+    $job->arguments = unserialize($job->arguments);
+    $job->raw_arguments = $job->arguments;
+    $arg_hook = $job->modulename . "_job_describe_args";
+    if (is_callable($arg_hook)) {
+        $new_args = call_user_func_array($arg_hook, array($job->callback, $job->arguments));
+        if (is_array($new_args) and count($new_args)) {
+            $job->arguments = $new_args;
+        }
+        else {
+            $job->arguments = $job->arguments;
+        }
+    }
+
     return $job;
 }
 
