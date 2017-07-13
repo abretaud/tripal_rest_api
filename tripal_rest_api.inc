@@ -110,6 +110,43 @@ function _tripal_rest_api_job_run() {
 }
 
 /**
+ * Retrieve job output log.
+ *
+ * @return object
+ */
+function _tripal_rest_api_job_logs($data) {
+
+    // Create 2 temp files for stdout and stderr
+    $stdout = realpath($data['stdout']);
+    $stderr = realpath($data['stderr']);
+    $stdout_dir = dirname($stdout);
+    $stderr_dir = dirname($stderr);
+    $stdout_name = basename($stdout);
+    $stderr_name = basename($stderr);
+    $shared_dir = '';
+
+    if (getenv('GALAXY_SHARED_DIR')) {
+        $shared_dir = rtrim(getenv('GALAXY_SHARED_DIR'), '/').'/logs';
+    }
+
+    // Check many things to avoid getting unauthorized file content
+    if (empty(getenv('GALAXY_SHARED_DIR')) || ($stdout_dir != $stderr_dir) || ($stdout_dir != $shared_dir)
+        || substr($stdout_name, 0, 6) != 'stdout' || substr($stderr_name, 0, 6) != 'stderr') {
+        return (object)array(
+            'status' => 'error',
+            'stdout' => '',
+            'stderr' =>''
+        );
+    }
+
+    return (object)array(
+            'status' => 'ok',
+            'stdout' => json_encode(file_get_contents($stdout)),
+            'stderr' => json_encode(file_get_contents($stderr))
+        );
+}
+
+/**
  * Callback for listing chado table content
  *
  * @param object $data

@@ -200,6 +200,30 @@ function tripal_rest_api_services_resources() {
                  'access arguments append' => FALSE,
                  'args' => array(),
              ),
+             'logs' => array(
+                 'help' => 'Get job output',
+                 'file' => array('type' => 'inc', 'module' => 'tripal_rest_api', 'name' => 'tripal_rest_api'),
+                 'callback' => '_tripal_rest_api_job_logs',
+                 'access callback' => 'user_access',
+                 'access arguments' => array('access tripal_rest_api job'),
+                 'access arguments append' => FALSE,
+                 'args' => array(
+                     array(
+                         'name' => 'stdout',
+                         'type' => 'str',
+                         'description' => 'Path to stdout file',
+                         'source' => 'data',
+                         'optional' => FALSE,
+                     ),
+                     array(
+                         'name' => 'stderr',
+                         'type' => 'str',
+                         'description' => 'Path to stderr file',
+                         'source' => 'data',
+                         'optional' => FALSE,
+                     ),
+                 ),
+             ),
          ),
      ),
     );
