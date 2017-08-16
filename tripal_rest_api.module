@@ -1,6 +1,8 @@
 <?php
 // $Id$
 
+require_once drupal_get_path('module', 'tripal_rest_api').'/api/tripal_rest_api.api.php';
+
 /**
  * Implementation of hook_permission().
  */
