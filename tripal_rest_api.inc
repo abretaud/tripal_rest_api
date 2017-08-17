@@ -91,14 +91,11 @@ function _tripal_rest_api_job_run() {
     }
 
     // Create 2 temp files for stdout and stderr
-    $stdout = '/dev/null';
-    $stderr = '/dev/null';
-    if (!empty(getenv('GALAXY_SHARED_DIR'))) {
-        $logs_dir = getenv('GALAXY_SHARED_DIR').'/logs/';
-        mkdir($logs_dir, 0777, true);
-        $stdout = tempnam($logs_dir, 'stdout');
-        $stderr = tempnam($logs_dir, 'stderr');
-    }
+    $temp_dir = sys_get_temp_dir();
+    $logs_dir = $temp_dir.'/tripal-job-logs/';
+    mkdir($logs_dir, 0777, true);
+    $stdout = tempnam($logs_dir, 'stdout');
+    $stderr = tempnam($logs_dir, 'stderr');
 
     exec("drush trp-run-jobs --username=admin > $stdout 2> $stderr &");
 
@@ -123,19 +120,18 @@ function _tripal_rest_api_job_logs($data) {
     $stderr_dir = dirname($stderr);
     $stdout_name = basename($stdout);
     $stderr_name = basename($stderr);
-    $shared_dir = '';
 
-    if (getenv('GALAXY_SHARED_DIR')) {
-        $shared_dir = rtrim(getenv('GALAXY_SHARED_DIR'), '/').'/logs';
-    }
+    $temp_dir = sys_get_temp_dir();
+    $logs_dir = $temp_dir.'/tripal-job-logs';
 
     // Check many things to avoid getting unauthorized file content
-    if (empty(getenv('GALAXY_SHARED_DIR')) || ($stdout_dir != $stderr_dir) || ($stdout_dir != $shared_dir)
+    if (($stdout_dir != $stderr_dir) || ($stdout_dir != $logs_dir)
         || substr($stdout_name, 0, 6) != 'stdout' || substr($stderr_name, 0, 6) != 'stderr') {
         return (object)array(
             'status' => 'error',
-            'stdout' => '',
-            'stderr' =>''
+            'msg' => "You do not have permission to access $stdout or $stderr, $stdout_dir, $logs_dir, $stdout_name, ".substr($stdout_name, 0, 6),
+            'stdout' => json_encode(""),
+            'stderr' => json_encode("")
         );
     }
 
