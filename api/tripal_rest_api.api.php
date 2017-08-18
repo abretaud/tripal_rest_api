@@ -18,7 +18,7 @@ function tripal_rest_api_run_indexing($queue_n=10, $sleep=120) {
         $finished = True; // We consider we have finished unless we find some queue item later
 
         foreach($queues as $q_n){
-            $q_name = 'elastic_queue_'.$q_n;
+            $q_name = 'elasticsearch_queue_'.$q_n;
             $q = DrupalQueue::get($q_name);
             $todo = $q->numberOfItems();
             if ($todo > 0) {

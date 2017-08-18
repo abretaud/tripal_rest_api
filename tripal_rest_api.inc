@@ -93,7 +93,9 @@ function _tripal_rest_api_job_run() {
     // Create 2 temp files for stdout and stderr
     $temp_dir = sys_get_temp_dir();
     $logs_dir = $temp_dir.'/tripal-job-logs/';
-    mkdir($logs_dir, 0777, true);
+    if (!is_dir($logs_dir)) {
+        mkdir($logs_dir, 0777, true);
+    }
     $stdout = tempnam($logs_dir, 'stdout');
     $stderr = tempnam($logs_dir, 'stderr');
 
@@ -177,62 +179,89 @@ function _tripal_rest_api_chado_taxonomic_ranks() {
  */
 function _tripal_rest_api_elasticsearch_index($data) {
 
-    if (!isset($data['table'])) {
-        return services_error('Missing Chado table name \'table\'', 406);
-    }
+    if ($data['mode'] == 'table') {
+        // Indexing a single table
 
-    $queue_N = $data['queues'];
-
-    // Convert human readable table name to id
-    $table_list = get_table_list();
-    foreach ($table_list as $table_id => $table_name) {
-        if ($data['table'] == $table_name) {
-            $table_dropdown = $table_id;
-            break;
+        if (!isset($data['table'])) {
+            return services_error('Missing Chado table name \'table\'', 406);
         }
-    }
 
-    if (!isset($table_dropdown)) {
-        return services_error('Could not find Chado table with name \''.$data['table'].'\'', 406);
+        $website_or_table = 'database table';
+        $website_base_url = ''; // not used
+        $index_name = $data['index_name'];
+        $index_table = $data['table'];
+        $tokenizer = $data['tokenizer'];
+    }
+    else {
+        // Indexing the whole website
+        $website_or_table = 'website';
+        $website_base_url = 'http://localhost/';
+        $index_name = 'website';
+        $index_table = ''; // not used
+        $tokenizer = ''; //not used
     }
 
     if (!isset($data['queues'])) {
         $data['queues'] = 10;
     }
-
-    $field_list = get_column_list($data['table']);
-
-    $fields = array();
-    if (!empty($data['fields'])) {
-        foreach ($data['fields'] as $asked_field) {
-            foreach ($field_list as $field_id => $field_name) {
-                if ($asked_field == $field_name) {
-                    $fields[strval($field_id)] = strval($field_id);
-                    break;
-                }
-            }
-        }
-    }
-    else if ($table_dropdown > 0) {
-      # No field given, index all fields
-      foreach ($field_list as $field_id => $field_name) {
-        $fields[strval($field_id)] = strval($field_id);
-      }
-    }
+    $queue_N = $data['queues'];
 
     // Add indexing tasks to the queues
-    $content = run_elasticsearch_indexing($table_dropdown, $queue_N, $fields);
+    $form_state = array();
+    $form_state['values']['queue_number'] = $queue_N;
+    $form_state['values']['website_or_table'] = $website_or_table;
+    $form_state['values']['website_base_url'] = $website_base_url;
+    $form_state['values']['index_name'] = $index_name;
+    if (!empty($index_table)) {
+        $form_state['values']['index_table'] = $index_table;
+    }
+    if (!empty($tokenizer)) {
+        $form_state['values']['index_settings']['tokenizer'] = $tokenizer;
+    }
+    if (isset($data['fields'])) {
+        $form_state['values']['table_fields'] = $data['fields'];
+    }
 
-    if ($table_dropdown > 0) {
+    drupal_form_submit('tripal_elasticsearch_indexing_form', $form_state);
+
+    if (form_get_errors() != '') {
+        return (object)array(
+            'status' => 'error',
+            'errors' => json_encode(form_get_errors())
+        );
+    }
+
+    if ($data['mode'] == 'table') {
         // Create the search block
-        tripal_elasticsearch_add_block($data['table'], $data['fields']);
+        $form_state = array();
+        $form_state['values']['index_name'] = $index_name;
+        $form_state['values']['table_name'] = $index_table;
+        $form_state['values']['index_fields'] = array_keys($data['fields']);
+        drupal_form_submit('table_search_interface_building_form_submit', $form_state);
+
+        if (form_get_errors() != '') {
+            return (object)array(
+                'status' => 'error',
+                'errors' => json_encode(form_get_errors())
+            );
+        }
+
+        if (!empty($data['links'])) {
+            $form_state = array();
+            $form_state['values']['search_block'] = $index_name;
+            $form_state['values']['field_wrapper'] = $data['links'];
+            drupal_form_submit('link_results_to_pages_form', $form_state);
+
+            if (form_get_errors() != '') {
+                return (object)array(
+                    'status' => 'error',
+                    'errors' => json_encode(form_get_errors())
+                );
+            }
+        }
 
         // Clear the cache (needed for search block to show up)
         drupal_flush_all_caches();
-
-        if (!empty($data['links'])) {
-            tripal_elasticsearch_add_links($data['table'], $data['links']);
-        }
     }
 
     return $content;
