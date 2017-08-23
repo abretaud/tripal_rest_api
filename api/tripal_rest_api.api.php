@@ -9,7 +9,7 @@
  */
 function tripal_rest_api_run_indexing($queue_n=10, $sleep=120) {
 
-    $queues = range(0, $queue_n);
+    $queues = range(0, $queue_n - 1);
 
     $finished = False;
 
