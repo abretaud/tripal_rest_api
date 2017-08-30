@@ -202,6 +202,15 @@ function tripal_rest_api_services_resources() {
                  'access arguments append' => FALSE,
                  'args' => array(),
              ),
+             'is_running' => array(
+                 'help' => 'Check if there is a job running',
+                 'file' => array('type' => 'inc', 'module' => 'tripal_rest_api', 'name' => 'tripal_rest_api'),
+                 'callback' => '_tripal_rest_api_job_is_running',
+                 'access callback' => 'user_access',
+                 'access arguments' => array('access tripal_rest_api job'),
+                 'access arguments append' => FALSE,
+                 'args' => array(),
+             ),
              'logs' => array(
                  'help' => 'Get job output',
                  'file' => array('type' => 'inc', 'module' => 'tripal_rest_api', 'name' => 'tripal_rest_api'),

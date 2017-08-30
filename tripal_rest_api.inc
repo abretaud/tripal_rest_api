@@ -109,6 +109,20 @@ function _tripal_rest_api_job_run() {
 }
 
 /**
+ * Callback to check if some job is running
+ * A side effect of this function is that it will clean the state of jobs that failed in a bad way
+ * (e.g. if exit was called during the job execution)
+ *
+ * @return object
+ */
+function _tripal_rest_api_job_is_running() {
+
+    return (object)array(
+        'status' => tripal_is_job_running(),
+    );
+}
+
+/**
  * Retrieve job output log.
  *
  * @return object
