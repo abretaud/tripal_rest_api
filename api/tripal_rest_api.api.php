@@ -32,7 +32,7 @@ function tripal_rest_api_run_indexing($queue_n=10, $sleep=120) {
                 if ($lock_id === FALSE) {
                     print "Cron queue $cron_q_name is available, launching cron-run.\n";
                     // The cron-run command watchdog log can be found in the cron queue from the admin interface
-                    exec("export BASE_URL=http://localhost/ && drush cron-run $cron_q_name > /dev/null 2> /dev/null &");
+                    exec("export BASE_URL=http://localhost/ && drush cron-run $cron_q_name > /dev/null 2> /dev/null &"); // TODO See if we should use drush_invoke_process()
                     sleep(1); // Wait just a sec to make sure process is really started
                 }
                 else {

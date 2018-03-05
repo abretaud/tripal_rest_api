@@ -99,7 +99,7 @@ function _tripal_rest_api_job_run() {
     $stdout = tempnam($logs_dir, 'stdout');
     $stderr = tempnam($logs_dir, 'stderr');
 
-    exec("drush trp-run-jobs --username=admin > $stdout 2> $stderr &");
+    exec("drush trp-run-jobs --username=admin --single > $stdout 2> $stderr &"); // TODO See if we should use drush_invoke_process()
 
     return (object)array(
             'status' => 'running',

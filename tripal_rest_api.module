@@ -70,7 +70,7 @@ function tripal_rest_api_job_create($job) {
  * @return object
  */
 function tripal_rest_api_chado_list($table) {
-    $content = db_query('SELECT * FROM {'.$table.'}')
+    $content = db_query('SELECT * FROM {chado.'.$table.'}')
         ->fetchAll();
 
     return $content;
@@ -83,7 +83,7 @@ function tripal_rest_api_chado_list($table) {
  * @return object
  */
 function tripal_rest_api_chado_taxonomic_ranks() {
-    $content = db_query("SELECT * FROM {cvterm} where name in ('subspecies', 'varietas', 'subvariety', 'forma', 'subforma')")
+    $content = db_query("SELECT * FROM {chado.cvterm} where name in ('subspecies', 'varietas', 'subvariety', 'forma', 'subforma')")
         ->fetchAll();
 
     return $content;
