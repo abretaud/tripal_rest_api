@@ -70,7 +70,11 @@ function tripal_rest_api_job_create($job) {
  * @return object
  */
 function tripal_rest_api_chado_list($table) {
-    $content = db_query('SELECT * FROM {chado.'.$table.'}')
+
+    if (substr($table, 0, 7) != 'tripal_')
+        $table = 'chado.'.$table;
+
+    $content = db_query('SELECT * FROM {'.$table.'}')
         ->fetchAll();
 
     return $content;
