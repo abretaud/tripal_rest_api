@@ -23,6 +23,10 @@ function tripal_rest_api_permission() {
         'create tripal_rest_api job' => array(
             'title' => t('Create new jobs from API'),
             'description' => t('Allow users to create jobs from the API.'),
+        ),
+        'create tripal_rest_api entity' => array(
+            'title' => t('Create new entities from API'),
+            'description' => t('Allow users to create entities from the API.'),
         )
     );
 }
@@ -61,6 +65,27 @@ function tripal_rest_api_job_retrieve($id) {
  */
 function tripal_rest_api_job_create($job) {
     return tripal_add_job($job->name, $job->modulename, $job->callback, $job->arguments, $job->uid);
+}
+
+/**
+ * Creates a new import job
+ *
+ * @param object job
+ * @return void
+ */
+function tripal_rest_api_job_create_import($job) {
+
+    module_load_include('inc', 'tripal_chado', 'includes/TripalImporter/'.$job->importer);
+    module_load_include('inc', 'tripal_analysis_blast', 'includes/TripalImporter/'.$job->importer);
+    module_load_include('inc', 'tripal_analysis_interpro', 'includes/TripalImporter/'.$job->importer);
+    module_load_include('inc', 'tripal_analysis_go', 'includes/TripalImporter/'.$job->importer);
+
+    $importerRC = new ReflectionClass($job->importer);
+    $importer = $importerRC->newInstanceArgs();
+
+    $importer->create($job->arguments, array('file_local' => $job->file));
+
+    return $importer->submitJob();
 }
 
 /**
@@ -143,6 +168,27 @@ function tripal_rest_api_services_resources() {
                          'name' => 'data',
                          'type' => 'stdClass',
                          'description' => 'The settings for indexing',
+                         'source' => 'data',
+                         'optional' => FALSE,
+                     ),
+                 ),
+             )
+         ),
+     ),
+     'entity' => array(
+         'actions' => array(
+             'create' => array(
+                'help' => t('Create a new entity.'),
+                'file' => array('type' => 'inc', 'module' => 'tripal_rest_api', 'name' => 'tripal_rest_api'),
+                'callback' => '_tripal_rest_api_entity_create',
+                'access callback' => 'user_access',
+                'access arguments' => array('create tripal_rest_api entity'),
+                'access arguments append' => FALSE,
+                'args' => array(
+                     array(
+                         'name' => 'data',
+                         'type' => 'stdClass',
+                         'description' => 'The settings for creating the entity',
                          'source' => 'data',
                          'optional' => FALSE,
                      ),
@@ -234,6 +280,23 @@ function tripal_rest_api_services_resources() {
                          'name' => 'stderr',
                          'type' => 'str',
                          'description' => 'Path to stderr file',
+                         'source' => 'data',
+                         'optional' => FALSE,
+                     ),
+                 ),
+             ),
+             'create_import' => array(
+                 'help' => 'Creates an import job',
+                 'file' => array('type' => 'inc', 'module' => 'tripal_rest_api', 'name' => 'tripal_rest_api'),
+                 'callback' => '_tripal_rest_api_job_create_import',
+                 'access callback' => 'user_access',
+                 'access arguments' => array('create tripal_rest_api job'),
+                 'access arguments append' => FALSE,
+                 'args' => array(
+                     array(
+                         'name' => 'data',
+                         'type' => 'stdClass',
+                         'description' => 'The job object',
                          'source' => 'data',
                          'optional' => FALSE,
                      ),

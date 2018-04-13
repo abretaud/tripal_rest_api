@@ -53,6 +53,16 @@ function tripal_rest_api_default_services_endpoint() {
                 'logs' => array(
                     'enabled' => '1',
                     ),
+                'create_import' => array(
+                    'enabled' => '1',
+                    ),
+                ),
+            ),
+        'entity' => array(
+            'actions' => array(
+                'create' => array(
+                    'enabled' => '1',
+                    ),
                 ),
             ),
         'chado' => array(

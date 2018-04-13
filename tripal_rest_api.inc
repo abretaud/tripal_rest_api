@@ -40,6 +40,46 @@ function _tripal_rest_api_job_create($data) {
 }
 
 /**
+ * Callback for creating a job for a data importer.
+ *
+ * @param object $data
+ * @return object
+ */
+function _tripal_rest_api_job_create_import($data) {
+
+    global $user;
+
+    $args = $data['arguments']; // Save this before as we want to keep it as an array
+
+    $data = json_decode(json_encode($data), FALSE); // Convert to a PHP object instead of array
+
+    $data->arguments = $args; // Restore the array to replace potential stdClass generated above
+
+    $data->uid = $user->uid;
+
+    if (!isset($data->name)) {
+        return services_error('Missing job attribute \'name\'', 406);
+    }
+
+    if (!isset($data->importer)) {
+        return services_error('Missing job attribute \'importer\'', 406);
+    }
+
+    if (!isset($data->file)) {
+        return services_error('Missing job attribute \'file\'', 406);
+    }
+
+    if (!isset($data->arguments)) {
+        return services_error('Missing job attribute \'arguments\'', 406);
+    }
+
+    $job_id = tripal_rest_api_job_create_import($data);
+    return (object)array(
+        'job_id' => $job_id,
+    );
+}
+
+/**
  * Callback for retrieving job resources.
  *
  * @param int $id
@@ -280,4 +320,129 @@ function _tripal_rest_api_elasticsearch_index($data) {
     }
 
     return $content;
+}
+
+/**
+ * Create a new entity.
+ *
+ * @return object
+ */
+function _tripal_rest_api_entity_create($data) {
+
+    $allowed_types = array('Organism', 'Analysis');
+
+    if (!isset($data['entity_type'])) {
+        return services_error("'entity_type' is required", 406);
+    }
+
+    $type = $data['entity_type'];
+
+    if (!in_array($data['entity_type'], $allowed_types)) {
+        return services_error("'entity_type' must be one of '".join("', '", $allowed_types)."'", 406);
+    }
+
+    $bundle = tripal_load_bundle_entity(array('label' => $type));
+    if (!$bundle) {
+        return (object)array(
+            'status' => 'error',
+            'msg' => 'Invalid content type: ' . $type,
+        );
+        return services_error('Invalid content type: ' . $type, 406);
+    }
+
+    // Get the list of available fields
+    $field_mapping = array();
+    $fields = field_info_fields();
+    foreach ($fields as $field) {
+      if (array_key_exists('TripalEntity', $field['bundles'])) {
+        foreach ($field['bundles']['TripalEntity'] as $bundle_name) {
+          if ($bundle_name == $bundle->name) {
+            $instance = field_info_instance('TripalEntity', $field['field_name'], $bundle_name);
+            if (array_key_exists('term_accession', $instance['settings'])){
+              $vocabulary = $instance['settings']['term_vocabulary'];
+              $accession = $instance['settings']['term_accession'];
+              $term = tripal_get_term_details($vocabulary, $accession);
+              $key = $term['name'];
+              $key = strtolower(preg_replace('/ /', '_', $key));
+              $field_mapping[$key] = $field['field_name'];
+            }
+          }
+        }
+      }
+    }
+
+    $converted_params = array();
+    foreach ($data['params'] as $key => $value) {
+      if (!isset($field_mapping[$key])) {
+        return services_error("Invalid parameter: ".$key.".", 406);
+      }
+      $converted_params[$field_mapping[$key]] = $value;
+    }
+
+    // Create the entity
+    $ec = entity_get_controller('TripalEntity');
+    $entity_data = array(
+      'bundle' => $bundle->name,
+      'term_id' => $bundle->term_id,
+    );
+
+    $entity = $ec->create($entity_data);
+    $instances = field_info_instances('TripalEntity', $bundle->name);
+
+    foreach ($instances as $field_name => $instance) {
+      if (isset($converted_params[$field_name])) {
+        $key_field = field_info_field($field_name);
+
+        $field_class = $key_field['type'];
+        if (tripal_load_include_field_class($field_class)) {
+          $key_field = new $field_class($key_field, $instance);
+          $elements = $key_field->elementInfo()[$key_field->getFieldTermID()];
+
+          if (isset($elements['elements'])) {
+            if ($type == 'Organism') {
+                $label_term = 'rdfs:label';
+                $infraspecific_name_term = tripal_get_chado_semweb_term('organism', 'infraspecific_name');
+                $infraspecific_type_term = tripal_get_chado_semweb_term('organism', 'type_id');
+
+                $label = $converted_params[$field_name]['type_id'] . ' ' . $converted_params[$field_name]['infraspecific_name'];
+                $entity->{$field_name}['und'][0]['value'][$label_term] = $label;
+                $entity->{$field_name}['und'][0]['value'][$infraspecific_name_term] = $converted_params[$field_name]['infraspecific_name'];
+                $entity->{$field_name}['und'][0]['value'][$infraspecific_type_term] = $converted_params[$field_name]['type_id'];
+
+                $entity->{$field_name}['und'][0]['chado-organism__type_id'] = $converted_params[$field_name]['type_id'];
+                $entity->{$field_name}['und'][0]['chado-organism__infraspecific_name'] = $converted_params[$field_name]['infraspecific_name'];
+            }
+            elseif ($type == 'Analysis') {
+                $sourcename_term = tripal_get_chado_semweb_term('analysis', 'sourcename');
+                $sourceversion_term = tripal_get_chado_semweb_term('analysis', 'sourceversion');
+                $sourceuri_term = tripal_get_chado_semweb_term('analysis', 'sourceuri');
+
+                $entity->{$field_name}['und'][0]['value'][$sourcename_term] = $converted_params[$field_name]['sourcename'];
+                $entity->{$field_name}['und'][0]['value'][$sourceversion_term] = $converted_params[$field_name]['sourceversion'];
+                $entity->{$field_name}['und'][0]['value'][$sourceuri_term] = $converted_params[$field_name]['sourceuri'];
+
+                $entity->{$field_name}['und'][0]['chado-analysis__sourcename'] = $converted_params[$field_name]['sourcename'];
+                $entity->{$field_name}['und'][0]['chado-analysis__sourceversion'] = $converted_params[$field_name]['sourceversion'];
+                $entity->{$field_name}['und'][0]['chado-analysis__sourceuri'] = $converted_params[$field_name]['sourceuri'];
+            }
+          }
+        }
+        else {
+          $field_table = $instance['settings']['chado_table'];
+          $field_column = $instance['settings']['chado_column'];
+          $entity->{$field_name}['und'][0]['value'] = $converted_params[$field_name]; // Needed to generate the entity label
+          $entity->{$field_name}['und'][0]['chado-' . $field_table . '__' . $field_column] = $converted_params[$field_name];
+        }
+      }
+    }
+
+    $entity = $entity->save();
+    if (!$entity) {
+        return services_error('Could not create entity. Maybe this entity already exists?', 500);
+    }
+
+    global $base_url;
+    $service_path = $base_url . '/web-services';
+    $new_entity_path = $service_path . '/content/v0.1/' . urlencode($type) . '/' . $entity->id;
+    drupal_goto($new_entity_path, array('external' => TRUE), 201);
 }
