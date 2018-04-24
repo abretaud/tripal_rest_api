@@ -9,3 +9,4 @@ dependencies[] = tripal_feature
 dependencies[] = tripal_analysis
 dependencies[] = tripal_organism
 dependencies[] = services
+dependencies[] = rest_server
