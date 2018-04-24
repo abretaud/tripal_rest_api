@@ -7,3 +7,4 @@ package = Tripal Extensions
 dependencies[] = tripal
 dependencies[] = tripal_chado
 dependencies[] = services
+dependencies[] = rest_server
