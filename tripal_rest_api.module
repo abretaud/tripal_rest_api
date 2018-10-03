@@ -27,6 +27,10 @@ function tripal_rest_api_permission() {
         'create tripal_rest_api entity' => array(
             'title' => t('Create new entities from API'),
             'description' => t('Allow users to create entities from the API.'),
+        ),
+        'access tripal_rest_api entity' => array(
+            'title' => t('Access entities from API'),
+            'description' => t('Allow users to access entities from the API.'),
         )
     );
 }
@@ -193,6 +197,15 @@ function tripal_rest_api_services_resources() {
                          'optional' => FALSE,
                      ),
                  ),
+             ),
+             'list' => array(
+                'help' => t('List available entities.'),
+                'file' => array('type' => 'inc', 'module' => 'tripal_rest_api', 'name' => 'tripal_rest_api'),
+                'callback' => '_tripal_rest_api_entity_list',
+                'access callback' => 'user_access',
+                'access arguments' => array('access tripal_rest_api entity'),
+                'access arguments append' => FALSE,
+                'args' => array(),
              )
          ),
      ),

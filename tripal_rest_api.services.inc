@@ -62,6 +62,9 @@ function tripal_rest_api_default_services_endpoint() {
             'actions' => array(
                 'create' => array(
                     'enabled' => '1',
+                ),
+                'list' => array(
+                    'enabled' => '1',
                     ),
                 ),
             ),

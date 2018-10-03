@@ -446,3 +446,21 @@ function _tripal_rest_api_entity_create($data) {
     $new_entity_path = $service_path . '/content/v0.1/' . urlencode($type) . '/' . $entity->id;
     drupal_goto($new_entity_path, array('external' => TRUE), 201);
 }
+
+
+/**
+ * List tripal entities.
+ *
+ * @return object
+ */
+function _tripal_rest_api_entity_list() {
+
+  $bundles = db_query("SELECT * FROM {tripal_bundle} ORDER BY term_id")->fetchAll();
+
+  $ret = array();
+  foreach ($bundles as $id => $bundle) {
+      $ret[$bundle->label] = $bundle->name;
+  }
+
+  return $ret;
+}
