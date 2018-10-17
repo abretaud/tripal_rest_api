@@ -83,6 +83,8 @@ function tripal_rest_api_job_create_import($job) {
     module_load_include('inc', 'tripal_analysis_blast', 'includes/TripalImporter/'.$job->importer);
     module_load_include('inc', 'tripal_analysis_interpro', 'includes/TripalImporter/'.$job->importer);
     module_load_include('inc', 'tripal_analysis_go', 'includes/TripalImporter/'.$job->importer);
+    module_load_include('inc', 'tripal_analysis_expression', 'includes/TripalImporter/'.$job->importer);
+    module_load_include('inc', 'tripal_biomaterial', 'includes/TripalImporter/'.$job->importer);
 
     $importerRC = new ReflectionClass($job->importer);
     $importer = $importerRC->newInstanceArgs();
