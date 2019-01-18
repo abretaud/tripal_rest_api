@@ -227,12 +227,44 @@ function _tripal_rest_api_chado_taxonomic_ranks() {
 }
 
 /**
+ * Callback for setting up the tuning form for elasticsearch
+ *
+ * @param object $data
+ * @return object
+ */
+
+function _tripal_rest_api_elasticsearch_tuning() {
+
+    $form_state = array('values' => array());
+    drupal_form_submit('tripal_elasticsearch_tuning_form', $form_state);
+    if (form_get_errors() != '') {
+        return (object)array(
+            'status' => 'error',
+            'errors' => json_encode(form_get_errors())
+        );
+    }
+}
+
+/**
  * Callback for indexing with elasticsearch
  *
  * @param object $data
  * @return object
  */
+
 function _tripal_rest_api_elasticsearch_index($data) {
+
+    // Manage options default values
+    
+    $tokenizer = '';
+    $token_filter = '';
+
+    
+    $index_form_url = isset($data['index_form_url']) ? $data['index_form_url'] : '';
+
+    // Three possibilities in Tripal 3
+    // Full website entities, gene_search, and table
+    // Nodes index is created automatically
 
     if ($data['mode'] == 'table') {
         // Indexing a single table
@@ -241,32 +273,34 @@ function _tripal_rest_api_elasticsearch_index($data) {
             return services_error('Missing Chado table name \'table\'', 406);
         }
 
-        $website_or_table = 'database table';
-        $website_base_url = ''; // not used
+        $index_type = 'database';
         $index_name = $data['index_name'];
         $index_table = $data['table'];
         $tokenizer = $data['tokenizer'];
     }
-    else {
-        // Indexing the whole website
-        $website_or_table = 'website';
-        $website_base_url = 'http://localhost/';
-        $index_name = 'website';
-        $index_table = ''; // not used
-        $tokenizer = ''; //not used
+
+    elseif ($data['mode'] == 'gene') {
+        // Gene data search
+
+        $index_type = 'gene_search';
+        $index_name = 'gene_search';
     }
 
-    if (!isset($data['queues'])) {
-        $data['queues'] = 10;
-    }
-    $queue_N = $data['queues'];
+    else {
+        // Indexing the whole website for entities
+        $index_type = 'entities';
+        $index_name = 'website';
+    } 
 
     // Add indexing tasks to the queues
     $form_state = array();
-    $form_state['values']['queue_number'] = $queue_N;
-    $form_state['values']['website_or_table'] = $website_or_table;
-    $form_state['values']['website_base_url'] = $website_base_url;
+    $form_state['values']['index_type'] = $index_type;
     $form_state['values']['index_name'] = $index_name;
+
+    $form_state['values']['exposed'] = isset($data['exposed']) ? $data['exposed'] : 'False';
+    $form_state['values']['index_form_url'] = isset($data['index_form_url']) ? $data['index_form_url'] : '';
+
+
     if (!empty($index_table)) {
         $form_state['values']['index_table'] = $index_table;
     }
