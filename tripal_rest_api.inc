@@ -323,7 +323,8 @@ function _tripal_rest_api_elasticsearch_index($data) {
     }
 
     return (object)array(
-        'status' => 'running',
+        'status' => 'ok',
+        'msg' => 'Index complete'
     );
 }
 
