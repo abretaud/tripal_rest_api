@@ -258,11 +258,6 @@ function _tripal_rest_api_elasticsearch_tuning() {
 
 function _tripal_rest_api_elasticsearch_index($data) {
 
-    // Manage options default values
-    
-    $token_filters = [];    
-    $index_form_url = isset($data['index_form_url']) ? $data['index_form_url'] : '';
-
     // Three possibilities in Tripal 3
     // Full website entities, gene_search, and table
     // Nodes index is created automatically
@@ -298,8 +293,7 @@ function _tripal_rest_api_elasticsearch_index($data) {
     $form_state['values']['index_name'] = $index_name;
 
     $form_state['values']['exposed'] = isset($data['exposed']) ? $data['exposed'] : 'False';
-    $form_state['values']['index_form_url'] = isset($data['index_form_url']) ? $data['index_form_url'] : '';
-
+    $form_state['values']['index_form_url'] = isset($data['index_url']) ? $data['index_url'] : '';
 
     if (!empty($index_table)) {
         $form_state['values']['index_table'] = $index_table;
@@ -311,7 +305,6 @@ function _tripal_rest_api_elasticsearch_index($data) {
         $form_state['values']['index_settings']['token_filters'] = $token_filters;
     }
 
-    // Fields should be an aray with $field_name => $field_mapping_type
     if (isset($data['fields'])) {
         $form_state['values']['table_fields'] = $data['fields'];
     }
