@@ -178,6 +178,16 @@ function tripal_rest_api_services_resources() {
                          'optional' => FALSE,
                      ),
                  ),
+             ),
+            'tune' => array(
+                'help' => t('Tripal entity index tuning for website indexing'),
+                'file' => array('type' => 'inc', 'module' => 'tripal_rest_api', 'name' => 'tripal_rest_api'),
+                'callback' => '_tripal_rest_api_elasticsearch_tuning',
+                'access callback' => 'user_access',
+                'access arguments' => array('access tripal_rest_api elasticsearch'),
+                'access arguments append' => FALSE,
+                'args' => array(
+                 ),
              )
          ),
      ),

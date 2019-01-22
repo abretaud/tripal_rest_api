@@ -83,6 +83,9 @@ function tripal_rest_api_default_services_endpoint() {
                 'index' => array(
                     'enabled' => '1',
                     ),
+                'tune' => array(
+                    'enabled' => '1',
+                    ),
                 ),
             ),
         'node' => array(
