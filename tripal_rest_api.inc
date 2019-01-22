@@ -259,9 +259,8 @@ function _tripal_rest_api_elasticsearch_tuning() {
 
 function _tripal_rest_api_elasticsearch_index($data) {
 
-    // Three possibilities in Tripal 3
-    // Full website entities, gene_search, and table
-    // Nodes index is created automatically
+    // Four possibilities in Tripal 3
+    // Full website entities, full website nodes, gene_search, and table
 
     if ($data['mode'] == 'table') {
         // Indexing a single table
@@ -282,11 +281,15 @@ function _tripal_rest_api_elasticsearch_index($data) {
         $index_name = 'gene_search';
     }
 
-    else {
-        // Indexing the whole website for entities
-        $index_type = 'entities';
-        $index_name = 'website';
+    elseif ($data['mode'] == 'nodes') {
+        // Indexing the whole website for nodes
+        $index_type = 'website';
+        $index_name = 'website_nodes';
     } 
+    else {
+        $index_type = 'entities';
+        $index_name = 'website_entities';
+    }
 
     // Add indexing tasks to the queues
     $form_state = array();
