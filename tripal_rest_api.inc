@@ -245,7 +245,8 @@ function _tripal_rest_api_elasticsearch_tuning() {
     }
 
     return (object)array(
-        'status' => 'running',
+        'status' => 'ok',
+        'msg' => 'Tuning complete'
     );
 }
 
