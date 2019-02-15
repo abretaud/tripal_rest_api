@@ -287,8 +287,21 @@ function _tripal_rest_api_elasticsearch_index($data) {
         $index_name = 'website_nodes';
     } 
     else {
+        // Indexing whole website for entities
         $index_type = 'entities';
         $index_name = 'website_entities';
+        // Need to make sure the tuning is done, if not, do it.
+        $count = db_query('SELECT COUNT(id) FROM {tripal_elasticsearch_priority}')->fetchField();
+        if (intval($count) === 0) {
+            $form_state = array('values' => array());
+            drupal_form_submit('tripal_elasticsearch_tuning_form', $form_state);
+            if (form_get_errors() != '') {
+                return (object)array(
+                    'status' => 'error',
+                    'errors' => json_encode(form_get_errors())
+                );
+            }       
+        }
     }
 
     // Add indexing tasks to the queues
