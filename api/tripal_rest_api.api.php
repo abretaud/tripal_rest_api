@@ -7,7 +7,7 @@
  * @param int queue_n Number of queues to inspect (default=10)
  * @param int sleep The number of seconds to wait before trying to process new queue item
  */
-function tripal_rest_api_run_indexing($queues=10, $sleep=120) {
+function tripal_rest_api_run_indexing($sleep=120) {
 
     $finished = False;
     $q_name = 'elasticsearch_dispatcher';
