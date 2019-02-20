@@ -262,6 +262,9 @@ function _tripal_rest_api_elasticsearch_index($data) {
     // Four possibilities in Tripal 3
     // Full website entities, full website nodes, gene_search, and table
 
+    $es = new ESInstance();
+    $indices = $es->getIndices();
+
     if ($data['mode'] == 'table') {
         // Indexing a single table
 
@@ -272,11 +275,22 @@ function _tripal_rest_api_elasticsearch_index($data) {
         $index_type = 'database';
         $index_name = $data['index_name'];
         $index_table = $data['table'];
+
+        if(in_array($index_name, $indices)){
+            tripal_elasticsearch_delete_index($index_name);
+        }
     }
 
     elseif ($data['mode'] == 'gene') {
         // Gene data search
-
+        if (in_array('gene_search_index', $indices)) {
+            // Update existing
+            GeneSearchIndexJob::generateDispatcherJobs(TRUE);
+            return (object)array(
+                'status' => 'ok',
+                'msg' => 'Index updated'
+            );
+        }
         $index_type = 'gene_search';
         $index_name = 'gene_search';
     }
@@ -302,6 +316,15 @@ function _tripal_rest_api_elasticsearch_index($data) {
                 );
             }       
         }
+        // Check for existing index
+        if (in_array('entities', $indices)) {
+            // Update existing
+            EntitiesIndexJob::generateDispatcherJobs(1, TRUE);
+            return (object)array(
+                'status' => 'ok',
+                'msg' => 'Index updated'
+            );
+        }        
     }
 
     // Add indexing tasks to the queues
