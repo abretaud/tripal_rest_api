@@ -9,24 +9,28 @@
  */
 function tripal_rest_api_run_indexing($queue_n=10, $sleep=120) {
 
-    $queues = range(1, $queue_n);
-
     $finished = False;
+    $q_name = 'elasticsearch_dispatcher';
+    $cron_queues = array(
+      'queue_elasticsearch_dispatcher',
+      'queue_elasticsearch_queue_1',
+      'queue_elasticsearch_queue_2',
+      'queue_elasticsearch_queue_3',
+      'queue_elasticsearch_queue_4',
+      'queue_elasticsearch_queue_5'
+    );
 
     while (!$finished) {
 
         $finished = True; // We consider we have finished unless we find some queue item later
 
         // Look into drupal queues to see if some indexing tasks are still there
-        foreach($queues as $q_n){
-            $q_name = 'elasticsearch_queue_'.$q_n;
-            $q = DrupalQueue::get($q_name);
-            $todo = $q->numberOfItems();
-            if ($todo > 0) {
-                print "Still $todo items in queue $q_name.\n";
-
-                // Look at the corresponding cron queue to see if it is busy or not
-                $cron_q_name = 'queue_elasticsearch_queue_'.$q_n;
+        $q = DrupalQueue::get($q_name);
+        $todo = $q->numberOfItems();
+        if ($todo > 0) {
+            print "Still $todo items in queue $q_name.\n";
+	        foreach($cron_queues as $cron_q_name){
+             // Look at the corresponding cron queue to see if it is busy or not
                 $job = _ultimate_cron_job_load($cron_q_name);
                 $lock_id = $job->isLocked();
                 if ($lock_id === FALSE) {
@@ -38,9 +42,8 @@ function tripal_rest_api_run_indexing($queue_n=10, $sleep=120) {
                 else {
                     print "Cron queue $q_name is busy (lock: $lock_id), skipping this one.\n";
                 }
-
                 $finished = False; // Something was just launched, we'll need to continue checking this queue
-            }
+	        }
         }
 
         // Wait a little before trying to run new queue items
