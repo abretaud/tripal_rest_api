@@ -9,28 +9,30 @@
  */
 function tripal_rest_api_run_indexing($queue_n=10, $sleep=120) {
 
+    $queues_number = range(1, $queue_n);
     $finished = False;
     $q_name = 'elasticsearch_dispatcher';
-    $cron_queues = array(
-      'queue_elasticsearch_dispatcher',
-      'queue_elasticsearch_queue_1',
-      'queue_elasticsearch_queue_2',
-      'queue_elasticsearch_queue_3',
-      'queue_elasticsearch_queue_4',
-      'queue_elasticsearch_queue_5'
+    $system_queues = array(
+      'elasticsearch_dispatcher',
     );
+
+    //Setup queue list
+    foreach($queues_number as $number){
+        $system_queues[] = 'elasticsearch_queue_' . $number;
+    }
+
 
     while (!$finished) {
 
         $finished = True; // We consider we have finished unless we find some queue item later
 
-        // Look into drupal queues to see if some indexing tasks are still there
-        $q = DrupalQueue::get($q_name);
-        $todo = $q->numberOfItems();
-        if ($todo > 0) {
-            print "Still $todo items in queue $q_name.\n";
-	        foreach($cron_queues as $cron_q_name){
-             // Look at the corresponding cron queue to see if it is busy or not
+        foreach($system_queues as $system_queue){
+            $q = DrupalQueue::get($system_queue);
+            $todo = $q->numberOfItems();
+            if ($todo > 0) {
+                print "Still $todo items in queue $system_queue.\n";
+                // Look at the corresponding cron queue to see if it is busy or not
+                $cron_q_name = 'queue_' . $system_queue ;
                 $job = _ultimate_cron_job_load($cron_q_name);
                 $lock_id = $job->isLocked();
                 if ($lock_id === FALSE) {
