@@ -223,12 +223,10 @@ function _tripal_rest_api_elasticsearch_index($data) {
 
         // Check for existing index
         if (in_array('website', $indices)) {
-            // Update existing
-            EntitiesIndexJob::generateDispatcherJobs(1, TRUE);
-            return (object)array(
-                'status' => 'ok',
-                'msg' => 'Index updated'
-            );
+            // Delete existing
+            $form_state = array();
+            $form_state['values']['indices'] = ['website']
+            drupal_form_submit('tripal_elasticsearch_delete_indices_form_submit', $form_state);
         }
     }
 
