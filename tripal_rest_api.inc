@@ -194,6 +194,10 @@ function _tripal_rest_api_chado_taxonomic_ranks() {
  */
 function _tripal_rest_api_elasticsearch_index($data) {
 
+    // List existing indices
+    $es = new ESInstance();
+    $indices = $es->getIndices();
+
     if ($data['mode'] == 'table') {
         // Indexing a single table
 
@@ -206,6 +210,7 @@ function _tripal_rest_api_elasticsearch_index($data) {
         $index_name = $data['index_name'];
         $index_table = $data['table'];
         $tokenizer = $data['tokenizer'];
+        $index_type = $data['table'];
     }
     else {
         // Indexing the whole website
@@ -214,6 +219,17 @@ function _tripal_rest_api_elasticsearch_index($data) {
         $index_name = 'website';
         $index_table = ''; // not used
         $tokenizer = ''; //not used
+        $index_type = 'website';
+
+        // Check for existing index
+        if (in_array('website', $indices)) {
+            // Update existing
+            EntitiesIndexJob::generateDispatcherJobs(1, TRUE);
+            return (object)array(
+                'status' => 'ok',
+                'msg' => 'Index updated'
+            );
+        }
     }
 
     if (!isset($data['queues'])) {
@@ -227,6 +243,7 @@ function _tripal_rest_api_elasticsearch_index($data) {
     $form_state['values']['website_or_table'] = $website_or_table;
     $form_state['values']['website_base_url'] = $website_base_url;
     $form_state['values']['index_name'] = $index_name;
+    $form_state['values']['$index_type'] = $index_type;
     if (!empty($index_table)) {
         $form_state['values']['index_table'] = $index_table;
     }
