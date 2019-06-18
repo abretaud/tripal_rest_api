@@ -225,7 +225,7 @@ function _tripal_rest_api_elasticsearch_index($data) {
         if (in_array('website', $indices)) {
             // Delete existing
             $form_state = array();
-            $form_state['values']['indices'] = ['website']
+            $form_state['values']['indices'] = ['website'];
             drupal_form_submit('tripal_elasticsearch_delete_indices_form_submit', $form_state);
         }
     }
