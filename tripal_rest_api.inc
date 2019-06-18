@@ -195,8 +195,12 @@ function _tripal_rest_api_chado_taxonomic_ranks() {
 function _tripal_rest_api_elasticsearch_index($data) {
 
     // List existing indices
-    $es = new ESInstance();
-    $indices = $es->getIndices();
+    libraries_load('elasticsearch-php');
+    $elasticsearch_host = variable_get('elasticsearch_host');
+    $client = Elasticsearch\ClientBuilder::create()
+      ->setHosts([$elasticsearch_host])
+      ->build();
+    $indices = $client->indices()->getMapping();
 
     if ($data['mode'] == 'table') {
         // Indexing a single table
