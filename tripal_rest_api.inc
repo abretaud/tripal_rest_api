@@ -200,7 +200,7 @@ function _tripal_rest_api_elasticsearch_index($data) {
     $client = Elasticsearch\ClientBuilder::create()
       ->setHosts([$elasticsearch_host])
       ->build();
-    $indices = $client->indices()->getMapping();
+    $indices = array_keys($client->indices()->getMapping());
 
     if ($data['mode'] == 'table') {
         // Indexing a single table
